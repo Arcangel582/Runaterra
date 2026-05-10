@@ -1,5 +1,28 @@
 const API_URL = "https://script.google.com/macros/s/AKfycbwRkxQnE_MQFHhtpHQLN4tq9hUNXN-_jFW3t9yefwNntODkUDikAsH2Tjb1zgeb7eCx/exec";
 
+const XP_TABLE = [
+  { level: 1, xp: 0, proficiency: 2 },
+  { level: 2, xp: 300, proficiency: 2 },
+  { level: 3, xp: 900, proficiency: 2 },
+  { level: 4, xp: 2700, proficiency: 2 },
+  { level: 5, xp: 6500, proficiency: 3 },
+  { level: 6, xp: 14000, proficiency: 3 },
+  { level: 7, xp: 23000, proficiency: 3 },
+  { level: 8, xp: 34000, proficiency: 3 },
+  { level: 9, xp: 48000, proficiency: 4 },
+  { level: 10, xp: 64000, proficiency: 4 },
+  { level: 11, xp: 85000, proficiency: 4 },
+  { level: 12, xp: 100000, proficiency: 4 },
+  { level: 13, xp: 120000, proficiency: 5 },
+  { level: 14, xp: 140000, proficiency: 5 },
+  { level: 15, xp: 165000, proficiency: 5 },
+  { level: 16, xp: 195000, proficiency: 5 },
+  { level: 17, xp: 225000, proficiency: 6 },
+  { level: 18, xp: 265000, proficiency: 6 },
+  { level: 19, xp: 305000, proficiency: 6 },
+  { level: 20, xp: 355000, proficiency: 6 },
+];
+
 const loginView = document.getElementById("loginView");
 const mainView = document.getElementById("mainView");
 const loginForm = document.getElementById("loginForm");
@@ -16,6 +39,7 @@ let currentData = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
+  setupDynamicActions();
 
   const savedSession = localStorage.getItem("runaterra_session");
 
@@ -122,6 +146,10 @@ async function cargarDatos() {
   }
 }
 
+/* =========================
+   RENDER GENERAL
+========================= */
+
 function renderJugador(data) {
   renderFicha(data);
   renderInventario(data.inventario || []);
@@ -130,7 +158,18 @@ function renderJugador(data) {
 
 function renderDM(jugadores) {
   fichaContainer.innerHTML = `
-    <h2 class="section-title">Panel del DM</h2>
+    <h2 class="section-title">Panel del DM: Experiencia</h2>
+
+    <div class="dm-note">
+      Desde aquí puedes sumar, quitar o establecer experiencia exacta. El sistema actualiza nivel y bono de competencia automáticamente.
+    </div>
+
+    <div class="cards-grid">
+      ${jugadores.map(j => renderDMXpCard(j)).join("")}
+    </div>
+
+    <h2 class="section-title">Resumen de fichas</h2>
+
     <div class="cards-grid">
       ${jugadores.map(j => renderMiniJugador(j)).join("")}
     </div>
@@ -160,20 +199,28 @@ function renderDM(jugadores) {
 function renderMiniJugador(data) {
   const jugador = data.jugador || {};
   const ficha = data.ficha || {};
+  const xpInfo = getXPProgress(ficha.experiencia);
 
   return `
     <article class="panel-card">
       <h3>${escapeHtml(jugador.personaje || jugador.jugador_id || "Personaje")}</h3>
-      <p>${escapeHtml(ficha.clase || "")} nivel ${escapeHtml(ficha.nivel || "")}</p>
+      <p>${escapeHtml(ficha.clase || "")} nivel ${escapeHtml(ficha.nivel || xpInfo.level || "")}</p>
+      <p>XP: ${formatNumber(ficha.experiencia || 0)}</p>
       <p>PG: ${escapeHtml(ficha.pg_actuales || "0")} / ${escapeHtml(ficha.pg_maximos || "0")}</p>
       <p>CA: ${escapeHtml(ficha.ca || "0")}</p>
+      ${renderXPBar(ficha.experiencia)}
     </article>
   `;
 }
 
+/* =========================
+   FICHA Y XP
+========================= */
+
 function renderFicha(data) {
   const jugador = data.jugador || {};
   const ficha = data.ficha || {};
+  const xpInfo = getXPProgress(ficha.experiencia);
 
   fichaContainer.innerHTML = `
     <article class="character-card">
@@ -182,15 +229,31 @@ function renderFicha(data) {
 
         <div class="character-title">
           <h2>${escapeHtml(jugador.personaje || jugador.jugador_id || "Personaje")}</h2>
-          <p>${escapeHtml(ficha.especie || "")} | ${escapeHtml(ficha.clase || "")} nivel ${escapeHtml(ficha.nivel || "")}</p>
+          <p>${escapeHtml(ficha.especie || "")} | ${escapeHtml(ficha.clase || "")} nivel ${escapeHtml(ficha.nivel || xpInfo.level || "")}</p>
           <p>Trasfondo: ${escapeHtml(ficha.trasfondo || "Sin trasfondo")}</p>
           <p>Región: ${escapeHtml(jugador.region || "Sin región")}</p>
         </div>
       </div>
 
+      <div class="xp-section">
+        <div class="xp-header">
+          <div>
+            <span class="stat-label">Experiencia</span>
+            <strong>${formatNumber(ficha.experiencia || 0)} XP</strong>
+          </div>
+
+          <div>
+            <span class="stat-label">Progreso</span>
+            <strong>${xpInfo.maxLevel ? "Nivel máximo" : `${formatNumber(xpInfo.missing)} XP para nivel ${xpInfo.nextLevel}`}</strong>
+          </div>
+        </div>
+
+        ${renderXPBar(ficha.experiencia)}
+      </div>
+
       <div class="stats-grid">
-        ${statBox("Nivel", ficha.nivel)}
-        ${statBox("Competencia", "+" + valueOrZero(ficha.competencia))}
+        ${statBox("Nivel", ficha.nivel || xpInfo.level)}
+        ${statBox("Competencia", "+" + valueOrZero(ficha.competencia || xpInfo.proficiency))}
         ${statBox("CA", ficha.ca)}
         ${statBox("PG", `${valueOrZero(ficha.pg_actuales)} / ${valueOrZero(ficha.pg_maximos)}`)}
         ${statBox("Iniciativa", "+" + valueOrZero(ficha.iniciativa))}
@@ -222,6 +285,123 @@ function renderFicha(data) {
     </article>
   `;
 }
+
+function renderDMXpCard(data) {
+  const jugador = data.jugador || {};
+  const ficha = data.ficha || {};
+  const xpInfo = getXPProgress(ficha.experiencia);
+
+  return `
+    <article class="panel-card dm-xp-card">
+      <h3>${escapeHtml(jugador.personaje || jugador.jugador_id)}</h3>
+
+      <p>
+        <strong>Nivel:</strong> ${escapeHtml(ficha.nivel || xpInfo.level)}
+        | <strong>Competencia:</strong> +${escapeHtml(ficha.competencia || xpInfo.proficiency)}
+      </p>
+
+      <p>
+        <strong>XP actual:</strong> ${formatNumber(ficha.experiencia || 0)}
+      </p>
+
+      <p>
+        ${xpInfo.maxLevel
+          ? "Nivel máximo alcanzado."
+          : `Faltan ${formatNumber(xpInfo.missing)} XP para nivel ${xpInfo.nextLevel}.`
+        }
+      </p>
+
+      ${renderXPBar(ficha.experiencia)}
+
+      <form class="dm-xp-form" data-jugador-id="${escapeHtml(jugador.jugador_id)}">
+        <label>Cantidad de XP</label>
+        <input type="number" name="cantidad" min="0" step="1" placeholder="Ej. 150" required />
+
+        <div class="dm-button-row">
+          <button type="submit" data-xp-action="sumarXP">Agregar XP</button>
+          <button type="submit" data-xp-action="restarXP" class="secondary-button">Quitar XP</button>
+          <button type="submit" data-xp-action="establecerXP" class="secondary-button">Establecer XP</button>
+        </div>
+      </form>
+
+      <p class="dm-action-message" id="xpMessage-${escapeHtml(jugador.jugador_id)}"></p>
+    </article>
+  `;
+}
+
+function renderXPBar(xpValue) {
+  const xpInfo = getXPProgress(xpValue);
+
+  return `
+    <div class="xp-bar-wrap">
+      <div class="xp-bar-meta">
+        <span>Nivel ${xpInfo.level}</span>
+        <span>${xpInfo.percent}%</span>
+      </div>
+
+      <div class="xp-bar">
+        <div class="xp-bar-fill" style="width: ${xpInfo.percent}%"></div>
+      </div>
+
+      <div class="xp-bar-text">
+        ${xpInfo.maxLevel
+          ? `${formatNumber(xpInfo.currentXP)} XP | Nivel máximo`
+          : `${formatNumber(xpInfo.currentXP)} / ${formatNumber(xpInfo.nextXP)} XP`
+        }
+      </div>
+    </div>
+  `;
+}
+
+function getXPProgress(xpValue) {
+  const xp = Math.max(0, Math.floor(Number(xpValue || 0)));
+
+  let current = XP_TABLE[0];
+  let next = null;
+
+  for (let i = 0; i < XP_TABLE.length; i++) {
+    if (xp >= XP_TABLE[i].xp) {
+      current = XP_TABLE[i];
+      next = XP_TABLE[i + 1] || null;
+    } else {
+      break;
+    }
+  }
+
+  if (!next) {
+    return {
+      currentXP: xp,
+      level: current.level,
+      proficiency: current.proficiency,
+      currentLevelXP: current.xp,
+      nextXP: current.xp,
+      nextLevel: current.level,
+      missing: 0,
+      percent: 100,
+      maxLevel: true
+    };
+  }
+
+  const totalInLevel = next.xp - current.xp;
+  const gainedInLevel = xp - current.xp;
+  const percent = Math.max(0, Math.min(100, Math.floor((gainedInLevel / totalInLevel) * 100)));
+
+  return {
+    currentXP: xp,
+    level: current.level,
+    proficiency: current.proficiency,
+    currentLevelXP: current.xp,
+    nextXP: next.xp,
+    nextLevel: next.level,
+    missing: Math.max(0, next.xp - xp),
+    percent,
+    maxLevel: false
+  };
+}
+
+/* =========================
+   INVENTARIO Y DINERO
+========================= */
 
 function renderInventario(inventario) {
   inventarioContainer.innerHTML = `
@@ -290,6 +470,75 @@ function renderDineroHTML(dinero) {
   `;
 }
 
+/* =========================
+   ACCIONES DINÁMICAS
+========================= */
+
+function setupDynamicActions() {
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+
+    if (form.classList.contains("dm-xp-form")) {
+      event.preventDefault();
+      await handleXPFormSubmit(form, event.submitter);
+    }
+  });
+}
+
+async function handleXPFormSubmit(form, submitter) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede modificar experiencia.");
+    return;
+  }
+
+  const jugadorId = form.dataset.jugadorId;
+  const cantidad = form.elements.cantidad.value;
+  const action = submitter?.dataset?.xpAction;
+
+  const message = document.getElementById(`xpMessage-${jugadorId}`);
+
+  if (!action) {
+    if (message) message.textContent = "No se reconoció la acción de XP.";
+    return;
+  }
+
+  if (!cantidad || Number(cantidad) < 0) {
+    if (message) message.textContent = "Escribe una cantidad válida.";
+    return;
+  }
+
+  try {
+    if (message) message.textContent = "Actualizando XP...";
+
+    const response = await apiRequest(action, {
+      token: currentSession.token,
+      jugador_id: jugadorId,
+      cantidad
+    });
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudo actualizar XP.");
+    }
+
+    if (message) {
+      message.textContent = `Listo: ${response.xp_anterior} XP → ${response.xp_nueva} XP. Nivel ${response.nivel}.`;
+    }
+
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+
+    if (message) {
+      message.textContent = error.message;
+    }
+  }
+}
+
+/* =========================
+   TABS
+========================= */
+
 function setupTabs() {
   const buttons = document.querySelectorAll(".tab-button");
   const contents = document.querySelectorAll(".tab-content");
@@ -307,14 +556,9 @@ function setupTabs() {
   });
 }
 
-function statBox(label, value) {
-  return `
-    <div class="stat-box">
-      <span class="stat-label">${escapeHtml(label)}</span>
-      <span class="stat-value">${escapeHtml(value || "0")}</span>
-    </div>
-  `;
-}
+/* =========================
+   API
+========================= */
 
 function apiRequest(action, params = {}) {
   return new Promise((resolve, reject) => {
@@ -346,6 +590,19 @@ function apiRequest(action, params = {}) {
 
     document.body.appendChild(script);
   });
+}
+
+/* =========================
+   UTILIDADES
+========================= */
+
+function statBox(label, value) {
+  return `
+    <div class="stat-box">
+      <span class="stat-label">${escapeHtml(label)}</span>
+      <span class="stat-value">${escapeHtml(value || "0")}</span>
+    </div>
+  `;
 }
 
 function safeImage(path) {
@@ -381,4 +638,10 @@ function formatMod(value) {
   }
 
   return String(number);
+}
+
+function formatNumber(value) {
+  const number = Number(value || 0);
+
+  return number.toLocaleString("es-MX");
 }
