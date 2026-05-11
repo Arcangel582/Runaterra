@@ -36,6 +36,7 @@ const dineroContainer = document.getElementById("dineroContainer");
 
 let currentSession = null;
 let currentData = null;
+let availableMonedas = [];
 
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
@@ -119,6 +120,12 @@ async function cargarDatos() {
       }
 
       currentData = response.jugadores;
+      availableMonedas = response.monedas || [];
+
+      if (!availableMonedas.length) {
+        availableMonedas = extraerMonedasDesdeJugadores(response.jugadores || []);
+      }
+
       renderDM(response.jugadores);
 
     } else {
@@ -144,6 +151,27 @@ async function cargarDatos() {
     mainView.classList.add("hidden");
     loginView.classList.remove("hidden");
   }
+}
+
+function extraerMonedasDesdeJugadores(jugadores) {
+  const mapa = new Map();
+
+  jugadores.forEach(jugadorData => {
+    (jugadorData.dinero || []).forEach(moneda => {
+      if (!mapa.has(moneda.moneda_id)) {
+        mapa.set(moneda.moneda_id, {
+          moneda_id: moneda.moneda_id,
+          nombre: moneda.nombre || moneda.moneda_id,
+          region: moneda.region || "",
+          imagen: moneda.imagen || "",
+          descripcion: moneda.descripcion || "",
+          activa: "sí"
+        });
+      }
+    });
+  });
+
+  return Array.from(mapa.values());
 }
 
 /* =========================
@@ -185,15 +213,26 @@ function renderDM(jugadores) {
     `).join("")}
   `;
 
-  dineroContainer.innerHTML = `
-    <h2 class="section-title">Dinero de todos los jugadores</h2>
-    ${jugadores.map(j => `
-      <div class="panel-card">
-        <h3>${escapeHtml(j.jugador.personaje || j.jugador.jugador_id)}</h3>
-        ${renderDineroHTML(j.dinero || [])}
-      </div>
-    `).join("")}
-  `;
+dineroContainer.innerHTML = `
+  <h2 class="section-title">Panel del DM: Dinero</h2>
+
+  <div class="dm-note">
+    Desde aquí puedes sumar, quitar o establecer dinero exacto para cada jugador. Si el jugador no tiene esa moneda, el sistema puede crearla al sumar o establecer.
+  </div>
+
+  <div class="cards-grid">
+    ${jugadores.map(j => renderDMMoneyCard(j)).join("")}
+  </div>
+
+  <h2 class="section-title">Resumen de dinero</h2>
+
+  ${jugadores.map(j => `
+    <div class="panel-card">
+      <h3>${escapeHtml(j.jugador.personaje || j.jugador.jugador_id)}</h3>
+      ${renderDineroHTML(j.dinero || [])}
+    </div>
+  `).join("")}
+`;
 }
 
 function renderMiniJugador(data) {
@@ -282,6 +321,54 @@ function renderFicha(data) {
           <p>${escapeHtml(ficha.conjuros_resumen || "Sin conjuros registrados.")}</p>
         </div>
       </div>
+    </article>
+  `;
+}
+
+function renderDMMoneyCard(data) {
+  const jugador = data.jugador || {};
+  const dinero = data.dinero || [];
+
+  const opcionesMonedas = availableMonedas.map(moneda => `
+    <option value="${escapeHtml(moneda.moneda_id)}">
+      ${escapeHtml(moneda.nombre || moneda.moneda_id)}${moneda.region ? ` - ${escapeHtml(moneda.region)}` : ""}
+    </option>
+  `).join("");
+
+  return `
+    <article class="panel-card dm-money-card">
+      <h3>${escapeHtml(jugador.personaje || jugador.jugador_id)}</h3>
+
+      <div class="money-summary-list">
+        ${dinero.length
+          ? dinero.map(moneda => `
+            <div class="money-summary-row">
+              <span>${escapeHtml(moneda.nombre || moneda.moneda_id)}</span>
+              <strong>${formatNumber(moneda.cantidad || 0)}</strong>
+            </div>
+          `).join("")
+          : `<p class="empty-small">No tiene monedas registradas.</p>`
+        }
+      </div>
+
+      <form class="dm-money-form" data-jugador-id="${escapeHtml(jugador.jugador_id)}">
+        <label>Moneda</label>
+        <select name="moneda_id" required>
+          <option value="">Selecciona moneda</option>
+          ${opcionesMonedas}
+        </select>
+
+        <label>Cantidad</label>
+        <input type="number" name="cantidad" min="0" step="1" placeholder="Ej. 50" required />
+
+        <div class="dm-button-row">
+          <button type="submit" data-money-action="sumarDinero">Agregar</button>
+          <button type="submit" data-money-action="restarDinero" class="secondary-button">Quitar</button>
+          <button type="submit" data-money-action="establecerDinero" class="secondary-button">Establecer</button>
+        </div>
+      </form>
+
+      <p class="dm-action-message" id="moneyMessage-${escapeHtml(jugador.jugador_id)}"></p>
     </article>
   `;
 }
@@ -482,7 +569,69 @@ function setupDynamicActions() {
       event.preventDefault();
       await handleXPFormSubmit(form, event.submitter);
     }
+
+    if (form.classList.contains("dm-money-form")) {
+      event.preventDefault();
+      await handleMoneyFormSubmit(form, event.submitter);
+    }
   });
+}
+
+async function handleMoneyFormSubmit(form, submitter) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede modificar dinero.");
+    return;
+  }
+
+  const jugadorId = form.dataset.jugadorId;
+  const monedaId = form.elements.moneda_id.value;
+  const cantidad = form.elements.cantidad.value;
+  const action = submitter?.dataset?.moneyAction;
+
+  const message = document.getElementById(`moneyMessage-${jugadorId}`);
+
+  if (!action) {
+    if (message) message.textContent = "No se reconoció la acción de dinero.";
+    return;
+  }
+
+  if (!monedaId) {
+    if (message) message.textContent = "Selecciona una moneda.";
+    return;
+  }
+
+  if (!cantidad || Number(cantidad) < 0) {
+    if (message) message.textContent = "Escribe una cantidad válida.";
+    return;
+  }
+
+  try {
+    if (message) message.textContent = "Actualizando dinero...";
+
+    const response = await apiRequest(action, {
+      token: currentSession.token,
+      jugador_id: jugadorId,
+      moneda_id: monedaId,
+      cantidad
+    });
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudo actualizar dinero.");
+    }
+
+    if (message) {
+      message.textContent = `Listo: ${response.cantidad_anterior} → ${response.cantidad_nueva}.`;
+    }
+
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+
+    if (message) {
+      message.textContent = error.message;
+    }
+  }
 }
 
 async function handleXPFormSubmit(form, submitter) {
