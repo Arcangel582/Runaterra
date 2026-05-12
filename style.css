@@ -988,3 +988,114 @@ select:focus {
     0 0 20px rgba(0, 200, 255, 0.25),
     inset 0 0 22px rgba(0, 200, 255, 0.06);
 }
+
+/* =========================
+   VERSION 2.3 - ITEMS DM
+========================= */
+
+.dm-item-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dm-inventory-list {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.dm-inventory-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 10px;
+  border: 1px solid rgba(200, 155, 60, 0.22);
+  background: rgba(1, 10, 19, 0.52);
+  clip-path: polygon(
+    7px 0,
+    calc(100% - 7px) 0,
+    100% 7px,
+    100% calc(100% - 7px),
+    calc(100% - 7px) 100%,
+    7px 100%,
+    0 calc(100% - 7px),
+    0 7px
+  );
+}
+
+.dm-inventory-row strong {
+  display: block;
+  color: var(--lol-gold-light);
+  font-size: 13px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.dm-inventory-row span {
+  display: block;
+  margin-top: 3px;
+  color: var(--lol-muted);
+  font-size: 12px;
+}
+
+.dm-remove-item-form {
+  display: block;
+}
+
+.dm-remove-item-form button {
+  padding: 8px 10px;
+  font-size: 11px;
+}
+
+.danger-button {
+  color: #ffd3cd;
+  border-color: rgba(255, 143, 122, 0.55);
+  background:
+    linear-gradient(180deg, rgba(110, 30, 24, 0.72), rgba(1, 10, 19, 0.94));
+}
+
+.danger-button::after {
+  background: var(--lol-danger);
+  box-shadow: 0 0 10px rgba(255, 143, 122, 0.55);
+}
+
+.dm-item-form {
+  display: block;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(200, 155, 60, 0.22);
+}
+
+.dm-item-form label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--lol-gold-soft);
+}
+
+.dm-item-form input,
+.dm-item-form select {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.dm-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.dm-button-row.single-action {
+  grid-template-columns: 1fr;
+}
+
+@media (max-width: 800px) {
+  .dm-inventory-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dm-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
