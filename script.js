@@ -37,6 +37,7 @@ const dineroContainer = document.getElementById("dineroContainer");
 let currentSession = null;
 let currentData = null;
 let availableMonedas = [];
+let availableItems = [];
 
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
@@ -121,6 +122,7 @@ async function cargarDatos() {
 
       currentData = response.jugadores;
       availableMonedas = response.monedas || [];
+      availableItems = response.items || [];
 
       if (!availableMonedas.length) {
         availableMonedas = extraerMonedasDesdeJugadores(response.jugadores || []);
@@ -204,7 +206,18 @@ function renderDM(jugadores) {
   `;
 
   inventarioContainer.innerHTML = `
-    <h2 class="section-title">Inventarios de todos los jugadores</h2>
+    <h2 class="section-title">Panel del DM: Items</h2>
+
+    <div class="dm-note">
+    Desde aquí puedes entregar items existentes a los jugadores o quitar items de sus inventarios. Los items quitados se desactivan en Sheets, no se borran.
+    </div>
+
+    <div class="cards-grid">
+      ${jugadores.map(j => renderDMItemCard(j)).join("")}
+    </div>
+
+    <h2 class="section-title">Resumen de inventarios</h2>
+
     ${jugadores.map(j => `
       <div class="panel-card">
         <h3>${escapeHtml(j.jugador.personaje || j.jugador.jugador_id)}</h3>
@@ -321,6 +334,81 @@ function renderFicha(data) {
           <p>${escapeHtml(ficha.conjuros_resumen || "Sin conjuros registrados.")}</p>
         </div>
       </div>
+    </article>
+  `;
+}
+
+function renderDMItemCard(data) {
+  const jugador = data.jugador || {};
+  const inventario = data.inventario || [];
+
+  const opcionesItems = availableItems.map(item => `
+    <option value="${escapeHtml(item.item_id)}">
+      ${escapeHtml(item.nombre || item.item_id)}${item.tipo ? ` - ${escapeHtml(item.tipo)}` : ""}
+    </option>
+  `).join("");
+
+  return `
+    <article class="panel-card dm-item-card">
+      <h3>${escapeHtml(jugador.personaje || jugador.jugador_id)}</h3>
+
+      <div class="dm-inventory-list">
+        ${inventario.length
+          ? inventario.map(item => `
+            <div class="dm-inventory-row">
+              <div>
+                <strong>${escapeHtml(item.nombre || item.item_id)}</strong>
+                <span>${escapeHtml(item.tipo || "Item")} | Cantidad: ${valueOrZero(item.cantidad)} | Cargas: ${valueOrZero(item.cargas_actuales)} / ${valueOrZero(item.cargas_maximas)}</span>
+              </div>
+
+              <form class="dm-remove-item-form" data-inventario-id="${escapeHtml(item.inventario_id)}">
+                <button type="submit" class="secondary-button danger-button">Quitar</button>
+              </form>
+            </div>
+          `).join("")
+          : `<p class="empty-small">No tiene items registrados.</p>`
+        }
+      </div>
+
+      <form class="dm-item-form" data-jugador-id="${escapeHtml(jugador.jugador_id)}">
+        <label>Item</label>
+        <select name="item_id" required>
+          <option value="">Selecciona item</option>
+          ${opcionesItems}
+        </select>
+
+        <div class="dm-form-grid">
+          <div>
+            <label>Cantidad</label>
+            <input type="number" name="cantidad" min="1" step="1" value="1" required />
+          </div>
+
+          <div>
+            <label>Cargas actuales</label>
+            <input type="number" name="cargas_actuales" min="0" step="1" placeholder="Ej. 3" />
+          </div>
+
+          <div>
+            <label>Cargas máximas</label>
+            <input type="number" name="cargas_maximas" min="0" step="1" placeholder="Ej. 3" />
+          </div>
+        </div>
+
+        <label>Equipado</label>
+        <select name="equipado">
+          <option value="no">No</option>
+          <option value="sí">Sí</option>
+        </select>
+
+        <label>Notas</label>
+        <input type="text" name="notas" placeholder="Ej. Recompensa de misión, comprado, prestado..." />
+
+        <div class="dm-button-row single-action">
+          <button type="submit">Dar item</button>
+        </div>
+      </form>
+
+      <p class="dm-action-message" id="itemMessage-${escapeHtml(jugador.jugador_id)}"></p>
     </article>
   `;
 }
@@ -574,7 +662,109 @@ function setupDynamicActions() {
       event.preventDefault();
       await handleMoneyFormSubmit(form, event.submitter);
     }
+
+    if (form.classList.contains("dm-item-form")) {
+      event.preventDefault();
+      await handleItemFormSubmit(form);
+    }
+
+    if (form.classList.contains("dm-remove-item-form")) {
+      event.preventDefault();
+      await handleRemoveItemSubmit(form);
+    }
   });
+}
+
+async function handleItemFormSubmit(form) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede entregar items.");
+    return;
+  }
+
+  const jugadorId = form.dataset.jugadorId;
+  const itemId = form.elements.item_id.value;
+  const cantidad = form.elements.cantidad.value || 1;
+  const cargasActuales = form.elements.cargas_actuales.value;
+  const cargasMaximas = form.elements.cargas_maximas.value;
+  const equipado = form.elements.equipado.value || "no";
+  const notas = form.elements.notas.value || "";
+
+  const message = document.getElementById(`itemMessage-${jugadorId}`);
+
+  if (!itemId) {
+    if (message) message.textContent = "Selecciona un item.";
+    return;
+  }
+
+  try {
+    if (message) message.textContent = "Entregando item...";
+
+    const response = await apiRequest("darItem", {
+      token: currentSession.token,
+      jugador_id: jugadorId,
+      item_id: itemId,
+      cantidad: cantidad,
+      cargas_actuales: cargasActuales,
+      cargas_maximas: cargasMaximas,
+      equipado: equipado,
+      notas: notas
+    });
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudo entregar el item.");
+    }
+
+    if (message) {
+      message.textContent = `Item entregado. ID: ${response.inventario_id}`;
+    }
+
+    form.reset();
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+
+    if (message) {
+      message.textContent = error.message;
+    }
+  }
+}
+
+async function handleRemoveItemSubmit(form) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede quitar items.");
+    return;
+  }
+
+  const inventarioId = form.dataset.inventarioId;
+
+  if (!inventarioId) {
+    alert("No se encontró inventario_id.");
+    return;
+  }
+
+  const confirmar = confirm("¿Seguro que quieres quitar este item del inventario? No se borrará, quedará inactivo en Sheets.");
+
+  if (!confirmar) {
+    return;
+  }
+
+  try {
+    const response = await apiRequest("quitarItem", {
+      token: currentSession.token,
+      inventario_id: inventarioId
+    });
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudo quitar el item.");
+    }
+
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
 }
 
 async function handleMoneyFormSubmit(form, submitter) {
