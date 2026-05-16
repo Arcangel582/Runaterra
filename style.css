@@ -1099,3 +1099,76 @@ select:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   VERSION 2.4 - CARGAS DM
+========================= */
+
+.dm-recharge-all-form {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.dm-recharge-all-form button {
+  width: 100%;
+}
+
+.dm-inventory-row-expanded {
+  align-items: start;
+}
+
+.dm-charge-controls {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(200, 155, 60, 0.20);
+  display: grid;
+  gap: 10px;
+}
+
+.dm-charge-action-form,
+.dm-charge-set-form {
+  display: block;
+}
+
+.dm-charge-action-form label,
+.dm-charge-set-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--lol-gold-soft);
+  font-size: 11px;
+}
+
+.dm-charge-action-form input,
+.dm-charge-set-form input {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.dm-mini-button-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.dm-mini-button-row button,
+.dm-charge-set-form button {
+  padding: 8px 9px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.dm-form-grid.two-cols {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (max-width: 900px) {
+  .dm-mini-button-row {
+    grid-template-columns: 1fr;
+  }
+
+  .dm-form-grid.two-cols {
+    grid-template-columns: 1fr;
+  }
+}
