@@ -352,13 +352,46 @@ function renderDMItemCard(data) {
     <article class="panel-card dm-item-card">
       <h3>${escapeHtml(jugador.personaje || jugador.jugador_id)}</h3>
 
+      <form class="dm-recharge-all-form" data-jugador-id="${escapeHtml(jugador.jugador_id)}">
+        <button type="submit">Recargar todos los items</button>
+      </form>
+
       <div class="dm-inventory-list">
         ${inventario.length
           ? inventario.map(item => `
-            <div class="dm-inventory-row">
+            <div class="dm-inventory-row dm-inventory-row-expanded">
               <div>
                 <strong>${escapeHtml(item.nombre || item.item_id)}</strong>
                 <span>${escapeHtml(item.tipo || "Item")} | Cantidad: ${valueOrZero(item.cantidad)} | Cargas: ${valueOrZero(item.cargas_actuales)} / ${valueOrZero(item.cargas_maximas)}</span>
+
+                <div class="dm-charge-controls">
+                  <form class="dm-charge-action-form" data-inventario-id="${escapeHtml(item.inventario_id)}">
+                    <label>Cantidad</label>
+                    <input type="number" name="cantidad" min="1" step="1" value="1" />
+
+                    <div class="dm-mini-button-row">
+                      <button type="submit" data-charge-action="sumarCarga">+ Carga</button>
+                      <button type="submit" data-charge-action="restarCarga" class="secondary-button">- Carga</button>
+                      <button type="submit" data-charge-action="recargarItem" class="secondary-button">Recargar</button>
+                    </div>
+                  </form>
+
+                  <form class="dm-charge-set-form" data-inventario-id="${escapeHtml(item.inventario_id)}">
+                    <div class="dm-form-grid two-cols">
+                      <div>
+                        <label>Cargas actuales</label>
+                        <input type="number" name="cargas_actuales" min="0" step="1" placeholder="${valueOrZero(item.cargas_actuales)}" />
+                        <button type="submit" data-charge-action="establecerCargasActuales" class="secondary-button">Establecer actuales</button>
+                      </div>
+
+                      <div>
+                        <label>Cargas máximas</label>
+                        <input type="number" name="cargas_maximas" min="0" step="1" placeholder="${valueOrZero(item.cargas_maximas)}" />
+                        <button type="submit" data-charge-action="cambiarCargasMaximas" class="secondary-button">Cambiar máximo</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
               </div>
 
               <form class="dm-remove-item-form" data-inventario-id="${escapeHtml(item.inventario_id)}">
@@ -672,7 +705,151 @@ function setupDynamicActions() {
       event.preventDefault();
       await handleRemoveItemSubmit(form);
     }
+
+    if (form.classList.contains("dm-charge-action-form")) {
+      event.preventDefault();
+      await handleChargeActionSubmit(form, event.submitter);
+    }
+
+    if (form.classList.contains("dm-charge-set-form")) {
+      event.preventDefault();
+      await handleChargeSetSubmit(form, event.submitter);
+    }
+
+    if (form.classList.contains("dm-recharge-all-form")) {
+      event.preventDefault();
+      await handleRechargeAllSubmit(form);
+    }
   });
+}
+
+async function handleChargeActionSubmit(form, submitter) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede modificar cargas.");
+    return;
+  }
+
+  const inventarioId = form.dataset.inventarioId;
+  const action = submitter?.dataset?.chargeAction;
+  const cantidad = form.elements.cantidad?.value || 1;
+
+  if (!inventarioId) {
+    alert("No se encontró inventario_id.");
+    return;
+  }
+
+  if (!action) {
+    alert("No se reconoció la acción de cargas.");
+    return;
+  }
+
+  try {
+    const response = await apiRequest(action, {
+      token: currentSession.token,
+      inventario_id: inventarioId,
+      cantidad: cantidad
+    });
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudieron actualizar las cargas.");
+    }
+
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
+}
+
+async function handleChargeSetSubmit(form, submitter) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede modificar cargas.");
+    return;
+  }
+
+  const inventarioId = form.dataset.inventarioId;
+  const action = submitter?.dataset?.chargeAction;
+
+  if (!inventarioId) {
+    alert("No se encontró inventario_id.");
+    return;
+  }
+
+  if (!action) {
+    alert("No se reconoció la acción de cargas.");
+    return;
+  }
+
+  let cantidad = "";
+
+  if (action === "establecerCargasActuales") {
+    cantidad = form.elements.cargas_actuales.value;
+  }
+
+  if (action === "cambiarCargasMaximas") {
+    cantidad = form.elements.cargas_maximas.value;
+  }
+
+  if (cantidad === "" || Number(cantidad) < 0) {
+    alert("Escribe una cantidad válida.");
+    return;
+  }
+
+  try {
+    const response = await apiRequest(action, {
+      token: currentSession.token,
+      inventario_id: inventarioId,
+      cantidad: cantidad
+    });
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudieron actualizar las cargas.");
+    }
+
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
+}
+
+async function handleRechargeAllSubmit(form) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede recargar items.");
+    return;
+  }
+
+  const jugadorId = form.dataset.jugadorId;
+
+  if (!jugadorId) {
+    alert("No se encontró jugador_id.");
+    return;
+  }
+
+  const confirmar = confirm("¿Recargar todos los items de este jugador hasta sus cargas máximas?");
+
+  if (!confirmar) {
+    return;
+  }
+
+  try {
+    const response = await apiRequest("recargarItemsJugador", {
+      token: currentSession.token,
+      jugador_id: jugadorId
+    });
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudieron recargar los items.");
+    }
+
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+    alert(error.message);
+  }
 }
 
 async function handleItemFormSubmit(form) {
