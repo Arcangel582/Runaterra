@@ -1172,3 +1172,113 @@ select:focus {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   VERSION 2.5 - HISTORIAL Y VERSIONES
+========================= */
+
+.history-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(200, 155, 60, 0.24);
+  background: rgba(1, 10, 19, 0.55);
+  color: var(--lol-muted);
+  clip-path: polygon(
+    9px 0,
+    calc(100% - 9px) 0,
+    100% 9px,
+    100% calc(100% - 9px),
+    calc(100% - 9px) 100%,
+    9px 100%,
+    0 calc(100% - 9px),
+    0 9px
+  );
+}
+
+.history-list,
+.version-list {
+  display: grid;
+  gap: 14px;
+}
+
+.history-card,
+.version-card {
+  position: relative;
+  padding: 16px;
+  border: 1px solid rgba(200, 155, 60, 0.34);
+  background:
+    linear-gradient(90deg, rgba(0, 200, 255, 0.08), transparent 36%),
+    rgba(1, 10, 19, 0.82);
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(240, 230, 210, 0.03);
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px),
+    0 12px
+  );
+}
+
+.history-card::before,
+.version-card::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 24px;
+  width: 10px;
+  height: 10px;
+  background: var(--lol-black);
+  border: 1px solid var(--lol-gold);
+  transform: rotate(45deg);
+  box-shadow: 0 0 12px rgba(200, 155, 60, 0.35);
+}
+
+.history-top,
+.version-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid rgba(200, 155, 60, 0.20);
+  padding-bottom: 8px;
+}
+
+.history-top strong,
+.version-top strong {
+  color: var(--lol-gold-light);
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+}
+
+.history-top span,
+.version-top span {
+  color: var(--lol-muted);
+  font-size: 12px;
+}
+
+.history-tags {
+  margin-bottom: 8px;
+}
+
+.history-card p,
+.version-card p {
+  margin: 8px 0 0;
+  color: var(--lol-text);
+  line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+  .history-summary,
+  .history-top,
+  .version-top {
+    flex-direction: column;
+  }
+}

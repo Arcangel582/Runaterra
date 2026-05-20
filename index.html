@@ -43,9 +43,11 @@
       </header>
 
       <nav class="tabs">
-        <button class="tab-button active" data-tab="ficha">Ficha</button>
-        <button class="tab-button" data-tab="inventario">Items</button>
-        <button class="tab-button" data-tab="dinero">Dinero</button>
+	<button class="tab-button active" data-tab="ficha">Ficha</button>
+	<button class="tab-button" data-tab="inventario">Items</button>
+	<button class="tab-button" data-tab="dinero">Dinero</button>
+	<button class="tab-button" data-tab="historial">Historial</button>
+	<button class="tab-button" data-tab="versiones">Versiones</button>
       </nav>
 
       <section id="fichaTab" class="tab-content active">
@@ -58,6 +60,14 @@
 
       <section id="dineroTab" class="tab-content">
         <div id="dineroContainer"></div>
+      </section>
+
+      <section id="historialTab" class="tab-content">
+  	<div id="historialContainer"></div>
+      </section>
+
+      <section id="versionesTab" class="tab-content">
+  	<div id="versionesContainer"></div>
       </section>
 
     </section>

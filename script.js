@@ -33,6 +33,9 @@ const logoutBtn = document.getElementById("logoutBtn");
 const fichaContainer = document.getElementById("fichaContainer");
 const inventarioContainer = document.getElementById("inventarioContainer");
 const dineroContainer = document.getElementById("dineroContainer");
+const historialContainer = document.getElementById("historialContainer");
+const versionesContainer = document.getElementById("versionesContainer");
+
 
 let currentSession = null;
 let currentData = null;
@@ -143,6 +146,8 @@ async function cargarDatos() {
       renderJugador(response.datos);
     }
 
+    await cargarHistorialYVersiones();
+
     loginView.classList.add("hidden");
     mainView.classList.remove("hidden");
 
@@ -174,6 +179,196 @@ function extraerMonedasDesdeJugadores(jugadores) {
   });
 
   return Array.from(mapa.values());
+}
+
+async function cargarHistorialYVersiones() {
+  if (!currentSession || !currentSession.token) {
+    return;
+  }
+
+  if (historialContainer) {
+    historialContainer.innerHTML = `<p class="empty">Cargando historial...</p>`;
+  }
+
+  if (versionesContainer) {
+    versionesContainer.innerHTML = `<p class="empty">Cargando versiones...</p>`;
+  }
+
+  try {
+    const historialResponse = await apiRequest("obtenerHistorial", {
+      token: currentSession.token,
+      limit: 100
+    });
+
+    if (historialResponse.ok) {
+      renderHistorial(historialResponse.historial || [], historialResponse.total || 0);
+    } else if (historialContainer) {
+      historialContainer.innerHTML = `<p class="empty">${escapeHtml(historialResponse.error || "No se pudo cargar el historial.")}</p>`;
+    }
+
+  } catch (error) {
+    console.error(error);
+
+    if (historialContainer) {
+      historialContainer.innerHTML = `<p class="empty">No se pudo cargar el historial.</p>`;
+    }
+  }
+
+  try {
+    const versionesResponse = await apiRequest("obtenerActualizaciones", {
+      token: currentSession.token,
+      limit: 50
+    });
+
+    if (versionesResponse.ok) {
+      renderVersiones(versionesResponse.actualizaciones || [], versionesResponse.total || 0);
+    } else if (versionesContainer) {
+      versionesContainer.innerHTML = `<p class="empty">${escapeHtml(versionesResponse.error || "No se pudieron cargar las versiones.")}</p>`;
+    }
+
+  } catch (error) {
+    console.error(error);
+
+    if (versionesContainer) {
+      versionesContainer.innerHTML = `<p class="empty">No se pudieron cargar las versiones.</p>`;
+    }
+  }
+}
+
+function renderHistorial(historial, total) {
+  if (!historialContainer) {
+    return;
+  }
+
+  historialContainer.innerHTML = `
+    <h2 class="section-title">Historial de campaña</h2>
+
+    <div class="dm-note">
+      Aquí se registran las acciones realizadas en el sistema: experiencia, dinero, items, cargas y recargas. El DM ve todo; cada jugador solo ve lo relacionado con su personaje.
+    </div>
+
+    <div class="history-summary">
+      <span>Registros mostrados: ${historial.length}</span>
+      <span>Total disponible: ${total}</span>
+    </div>
+
+    ${historial.length
+      ? `<div class="history-list">
+          ${historial.map(row => `
+            <article class="history-card">
+              <div class="history-top">
+                <strong>${escapeHtml(formatActionLabel(row.accion))}</strong>
+                <span>${escapeHtml(formatDate(row.fecha))}</span>
+              </div>
+
+              <div class="history-tags">
+                ${row.usuario ? `<span class="badge">Usuario: ${escapeHtml(row.usuario)}</span>` : ""}
+                ${row.jugador_id ? `<span class="badge">Jugador: ${escapeHtml(row.jugador_id)}</span>` : ""}
+                ${row.item_id ? `<span class="badge">Item: ${escapeHtml(row.item_id)}</span>` : ""}
+                ${row.moneda_id ? `<span class="badge">Moneda: ${escapeHtml(row.moneda_id)}</span>` : ""}
+              </div>
+
+              <p>${escapeHtml(row.detalle || "Sin detalle.")}</p>
+            </article>
+          `).join("")}
+        </div>`
+      : `<p class="empty">No hay acciones registradas todavía.</p>`
+    }
+  `;
+}
+
+function renderVersiones(actualizaciones, total) {
+  if (!versionesContainer) {
+    return;
+  }
+
+  versionesContainer.innerHTML = `
+    <h2 class="section-title">Versiones y actualizaciones</h2>
+
+    <div class="dm-note">
+      Esta sección muestra los cambios hechos al sistema del inventario: funciones nuevas, archivos modificados y estado de cada versión.
+    </div>
+
+    <div class="history-summary">
+      <span>Versiones mostradas: ${actualizaciones.length}</span>
+      <span>Total disponible: ${total}</span>
+    </div>
+
+    ${actualizaciones.length
+      ? `<div class="version-list">
+          ${actualizaciones.map(row => `
+            <article class="version-card">
+              <div class="version-top">
+                <strong>Versión ${escapeHtml(row.version || "Sin versión")}</strong>
+                <span>${escapeHtml(formatDate(row.fecha))}</span>
+              </div>
+
+              <div class="history-tags">
+                ${row.tipo ? `<span class="badge">${escapeHtml(row.tipo)}</span>` : ""}
+                ${row.estado ? `<span class="badge">${escapeHtml(row.estado)}</span>` : ""}
+              </div>
+
+              <p><strong>Cambio:</strong> ${escapeHtml(row.cambio || "Sin descripción.")}</p>
+
+              ${row.archivos_modificados
+                ? `<p><strong>Archivos:</strong> ${escapeHtml(row.archivos_modificados)}</p>`
+                : ""
+              }
+
+              ${row.notas
+                ? `<p><strong>Notas:</strong> ${escapeHtml(row.notas)}</p>`
+                : ""
+              }
+            </article>
+          `).join("")}
+        </div>`
+      : `<p class="empty">No hay versiones registradas todavía.</p>`
+    }
+  `;
+}
+
+function formatDate(value) {
+  if (!value) {
+    return "Sin fecha";
+  }
+
+  const date = new Date(value);
+
+  if (isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleString("es-MX", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function formatActionLabel(action) {
+  const labels = {
+    sumar_xp: "Agregar XP",
+    restar_xp: "Quitar XP",
+    establecer_xp: "Establecer XP",
+
+    sumar_dinero: "Agregar dinero",
+    restar_dinero: "Quitar dinero",
+    establecer_dinero: "Establecer dinero",
+
+    dar_item: "Dar item",
+    quitar_item: "Quitar item",
+
+    sumar_cargas: "Agregar carga",
+    restar_cargas: "Quitar carga",
+    establecer_actuales_cargas: "Establecer cargas actuales",
+    cambiar_maximas_cargas: "Cambiar cargas máximas",
+    recargar_cargas: "Recargar item",
+    recargar_items_jugador: "Recargar items del jugador"
+  };
+
+  return labels[action] || action || "Acción";
 }
 
 /* =========================
