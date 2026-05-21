@@ -1282,3 +1282,751 @@ select:focus {
     flex-direction: column;
   }
 }
+
+/* =========================
+   VERSION 3.0 - CREAR ITEMS Y MONEDAS
+========================= */
+
+.create-panel {
+  margin-bottom: 20px;
+}
+
+.create-panel h3 {
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(200, 155, 60, 0.28);
+}
+
+.create-panel textarea {
+  width: 100%;
+  min-height: 95px;
+  resize: vertical;
+  margin-bottom: 12px;
+  padding: 13px 14px;
+  border: 1px solid rgba(200, 155, 60, 0.48);
+  background: rgba(1, 10, 19, 0.76);
+  color: var(--lol-text);
+  font-size: 15px;
+  font-family: Georgia, "Times New Roman", serif;
+  box-shadow:
+    inset 0 0 20px rgba(0, 0, 0, 0.45),
+    inset 0 0 0 1px rgba(240, 230, 210, 0.03);
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px),
+    0 12px
+  );
+}
+
+.create-panel textarea:focus {
+  outline: none;
+  border-color: rgba(0, 200, 255, 0.88);
+  box-shadow:
+    0 0 20px rgba(0, 200, 255, 0.25),
+    inset 0 0 22px rgba(0, 200, 255, 0.06);
+}
+
+.dm-form-grid.three-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 900px) {
+  .dm-form-grid.three-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   AJUSTE VISUAL HEXTECH / CLIENTE LOL
+   Formularios, textarea y botones
+========================= */
+
+/* --- Paneles de creación --- */
+.create-panel {
+  margin-bottom: 22px;
+  padding: 18px 18px 20px;
+  border: 1px solid rgba(200, 155, 60, 0.34);
+  background:
+    linear-gradient(90deg, rgba(0, 200, 255, 0.08), transparent 35%),
+    linear-gradient(180deg, rgba(8, 24, 43, 0.94), rgba(2, 12, 24, 0.94));
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(240, 230, 210, 0.03);
+  clip-path: polygon(
+    14px 0,
+    calc(100% - 14px) 0,
+    100% 14px,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    14px 100%,
+    0 calc(100% - 14px),
+    0 14px
+  );
+}
+
+.create-panel h3 {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(200, 155, 60, 0.28);
+  color: var(--lol-gold-light);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* --- Grid de formularios --- */
+.dm-form-grid {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.dm-form-grid.two-cols {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.dm-form-grid.three-cols {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* --- Labels --- */
+.create-panel label,
+.dm-xp-form label,
+.dm-money-form label,
+.dm-item-form label,
+.dm-charge-form label,
+.dm-recharge-all-form label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--lol-gold-light);
+  font-size: 12px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+/* --- Inputs / selects / textarea --- */
+.create-panel input,
+.create-panel select,
+.create-panel textarea,
+.dm-xp-form input,
+.dm-money-form input,
+.dm-money-form select,
+.dm-item-form input,
+.dm-item-form select,
+.dm-charge-form input,
+.dm-recharge-all-form input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(200, 155, 60, 0.44);
+  background:
+    linear-gradient(180deg, rgba(1, 10, 19, 0.92), rgba(3, 14, 28, 0.94));
+  color: var(--lol-text);
+  font-size: 14px;
+  font-family: Georgia, "Times New Roman", serif;
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.42),
+    inset 0 0 0 1px rgba(240, 230, 210, 0.02);
+  border-radius: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  clip-path: polygon(
+    10px 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% calc(100% - 10px),
+    calc(100% - 10px) 100%,
+    10px 100%,
+    0 calc(100% - 10px),
+    0 10px
+  );
+}
+
+.create-panel input::placeholder,
+.create-panel textarea::placeholder,
+.dm-xp-form input::placeholder,
+.dm-money-form input::placeholder,
+.dm-item-form input::placeholder,
+.dm-charge-form input::placeholder,
+.dm-recharge-all-form input::placeholder {
+  color: rgba(220, 210, 190, 0.44);
+}
+
+/* --- Focus bonito estilo hextech --- */
+.create-panel input:focus,
+.create-panel select:focus,
+.create-panel textarea:focus,
+.dm-xp-form input:focus,
+.dm-money-form input:focus,
+.dm-money-form select:focus,
+.dm-item-form input:focus,
+.dm-item-form select:focus,
+.dm-charge-form input:focus,
+.dm-recharge-all-form input:focus {
+  outline: none;
+  border-color: rgba(0, 200, 255, 0.88);
+  box-shadow:
+    0 0 0 1px rgba(0, 200, 255, 0.22),
+    0 0 22px rgba(0, 200, 255, 0.16),
+    inset 0 0 16px rgba(0, 200, 255, 0.05);
+}
+
+/* --- Textarea: aquí está el cambio grande --- */
+.create-panel textarea {
+  min-height: 150px;
+  resize: vertical;
+  line-height: 1.45;
+  margin-bottom: 14px;
+  background:
+    linear-gradient(180deg, rgba(2, 11, 23, 0.96), rgba(3, 16, 30, 0.96)),
+    radial-gradient(circle at top left, rgba(0, 180, 255, 0.05), transparent 45%);
+}
+
+/* --- Select con flecha visual más limpia --- */
+.create-panel select,
+.dm-money-form select,
+.dm-item-form select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(200, 155, 60, 0.9) 50%),
+    linear-gradient(135deg, rgba(200, 155, 60, 0.9) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) calc(50% - 2px),
+    calc(100% - 16px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 38px;
+}
+
+/* --- Filas de botones --- */
+.dm-button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.dm-button-row.single-action button {
+  width: 100%;
+}
+
+/* --- Botones base --- */
+.dm-button-row button,
+.create-panel button,
+.panel-card button,
+button.secondary-button {
+  position: relative;
+  min-height: 40px;
+  padding: 10px 18px;
+  border: 1px solid rgba(200, 155, 60, 0.58);
+  color: #f6f2e8;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  cursor: pointer;
+  border-radius: 0;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease;
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px),
+    0 12px
+  );
+}
+
+/* --- Botón primario: cian hextech --- */
+.dm-button-row button:not(.secondary-button),
+.create-panel button:not(.secondary-button) {
+  background:
+    linear-gradient(180deg, rgba(38, 218, 255, 0.95), rgba(0, 154, 214, 0.95));
+  color: #f7fcff;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.05) inset,
+    0 8px 18px rgba(0, 160, 220, 0.22);
+}
+
+/* --- Botón secundario: oscuro dorado --- */
+button.secondary-button,
+.dm-button-row .secondary-button {
+  background:
+    linear-gradient(180deg, rgba(47, 42, 28, 0.96), rgba(22, 20, 14, 0.96));
+  color: #f0e7d2;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.03),
+    0 8px 18px rgba(0, 0, 0, 0.22);
+}
+
+/* --- Hover --- */
+.dm-button-row button:hover,
+.create-panel button:hover,
+.panel-card button:hover,
+button.secondary-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 215, 120, 0.82);
+}
+
+.dm-button-row button:not(.secondary-button):hover,
+.create-panel button:not(.secondary-button):hover {
+  background:
+    linear-gradient(180deg, rgba(62, 231, 255, 1), rgba(0, 175, 230, 1));
+  box-shadow:
+    0 0 16px rgba(0, 200, 255, 0.22),
+    0 10px 22px rgba(0, 160, 220, 0.28);
+}
+
+button.secondary-button:hover,
+.dm-button-row .secondary-button:hover {
+  background:
+    linear-gradient(180deg, rgba(72, 62, 39, 0.98), rgba(30, 25, 18, 0.98));
+  box-shadow:
+    0 0 12px rgba(200, 155, 60, 0.16),
+    0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* --- Active --- */
+.dm-button-row button:active,
+.create-panel button:active,
+.panel-card button:active,
+button.secondary-button:active {
+  transform: translateY(0);
+}
+
+/* --- Mensajes de acción --- */
+.dm-action-message {
+  margin-top: 12px;
+  color: var(--lol-muted);
+  font-size: 13px;
+  min-height: 18px;
+}
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .dm-form-grid.two-cols,
+  .dm-form-grid.three-cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   FIX EXTRA - SELECTS Y NUMBER INPUTS
+========================= */
+
+/* Intenta forzar esquema oscuro en controles nativos */
+.create-panel select,
+.dm-money-form select,
+.dm-item-form select,
+.dm-charge-form select,
+.dm-xp-form select,
+.panel-card select,
+input[type="number"] {
+  color-scheme: dark;
+}
+
+/* Color del texto y fondo del select cerrado */
+.create-panel select,
+.dm-money-form select,
+.dm-item-form select,
+.dm-charge-form select,
+.dm-xp-form select,
+.panel-card select {
+  background-color: #06111d;
+  color: #f1e6c8;
+}
+
+/* Opciones del desplegable */
+.create-panel select option,
+.dm-money-form select option,
+.dm-item-form select option,
+.dm-charge-form select option,
+.dm-xp-form select option,
+.panel-card select option {
+  background: #081523;
+  color: #f2e8d3;
+}
+
+/* En algunos navegadores sí ayuda para opción seleccionada */
+.create-panel select option:checked,
+.dm-money-form select option:checked,
+.dm-item-form select option:checked,
+.dm-charge-form select option:checked,
+.dm-xp-form select option:checked,
+.panel-card select option:checked {
+  background: #114c72;
+  color: #ffffff;
+}
+
+/* Placeholder visual oscuro para opción vacía */
+.create-panel select option[value=""],
+.dm-money-form select option[value=""],
+.dm-item-form select option[value=""],
+.dm-charge-form select option[value=""],
+.dm-xp-form select option[value=""],
+.panel-card select option[value=""] {
+  color: rgba(230, 220, 200, 0.65);
+}
+
+/* Quitar spinner blanco nativo en Chrome / Edge / Opera / Brave */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Quitar spinner en Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* =========================
+   ESTILO MÁS "CLIENTE LOL"
+========================= */
+
+/* Títulos de sección con línea decorativa */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 12px;
+  color: #f0e6d2;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.section-title::before {
+  content: "◈";
+  color: #c89b3c;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(200, 155, 60, 0.55),
+    rgba(0, 200, 255, 0.15),
+    transparent
+  );
+}
+
+/* Notas DM más tipo panel del cliente */
+.dm-note {
+  position: relative;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(200, 155, 60, 0.28);
+  background:
+    linear-gradient(90deg, rgba(0, 200, 255, 0.05), transparent 40%),
+    linear-gradient(180deg, rgba(13, 22, 37, 0.94), rgba(5, 11, 20, 0.94));
+  color: rgba(235, 225, 205, 0.88);
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px),
+    0 12px
+  );
+}
+
+/* Paneles un poco más “cliente” */
+.panel-card,
+.character-card,
+.create-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.panel-card::before,
+.character-card::before,
+.create-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(200, 155, 60, 0.75),
+    rgba(0, 200, 255, 0.15),
+    transparent
+  );
+}
+
+.panel-card h3,
+.create-panel h3 {
+  color: #f1e6cf;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+/* Mejoras en botones: más cliente */
+.dm-button-row button,
+.create-panel button,
+.panel-card button,
+button.secondary-button {
+  min-height: 36px;
+  padding: 8px 14px;
+  font-size: 12px;
+  letter-spacing: 0.75px;
+}
+
+.dm-button-row button:not(.secondary-button),
+.create-panel button:not(.secondary-button) {
+  background:
+    linear-gradient(180deg, #34d9ff 0%, #0ea8de 58%, #0b88bc 100%);
+  border-color: rgba(147, 225, 255, 0.6);
+  color: #f8feff;
+}
+
+.dm-button-row button:not(.secondary-button):hover,
+.create-panel button:not(.secondary-button):hover {
+  background:
+    linear-gradient(180deg, #53e4ff 0%, #1cc3f1 58%, #0d99cf 100%);
+}
+
+/* Botón secundario más LoL */
+button.secondary-button,
+.dm-button-row .secondary-button {
+  background:
+    linear-gradient(180deg, #4b4229 0%, #2d2618 55%, #1c170f 100%);
+  border-color: rgba(200, 155, 60, 0.58);
+  color: #f2e8d3;
+}
+
+/* Inputs más compactos estilo cliente */
+.create-panel input,
+.create-panel select,
+.create-panel textarea,
+.dm-xp-form input,
+.dm-money-form input,
+.dm-money-form select,
+.dm-item-form input,
+.dm-item-form select,
+.dm-charge-form input,
+.dm-charge-form select,
+.panel-card input,
+.panel-card select {
+  min-height: 34px;
+  font-size: 13px;
+}
+
+/* Textarea más elegante */
+.create-panel textarea {
+  min-height: 165px;
+  padding: 14px 16px;
+  background:
+    linear-gradient(180deg, rgba(3, 12, 24, 0.98), rgba(4, 18, 33, 0.98)),
+    radial-gradient(circle at top left, rgba(0, 190, 255, 0.06), transparent 42%);
+  color: #efe4cd;
+}
+
+/* Cards de resumen con look más cliente */
+.item-card,
+.money-card {
+  background:
+    linear-gradient(180deg, rgba(8, 22, 40, 0.96), rgba(2, 10, 20, 0.96));
+  border: 1px solid rgba(200, 155, 60, 0.28);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.02),
+    0 12px 24px rgba(0,0,0,0.22);
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 calc(100% - 12px),
+    0 12px
+  );
+}
+
+/* =========================
+   PULIDO CLIENTE LOL - SIN TOCAR HTML
+========================= */
+
+/* Más aire entre paneles del DM */
+.dm-item-card,
+.dm-money-card,
+.dm-xp-card,
+.create-panel {
+  border-color: rgba(200, 155, 60, 0.38);
+  background:
+    linear-gradient(180deg, rgba(8, 23, 40, 0.96), rgba(1, 9, 18, 0.98));
+}
+
+/* Separadores internos más parecidos al cliente */
+.dm-item-form,
+.dm-money-form,
+.dm-xp-form,
+.dm-charge-controls {
+  border-top: 1px solid rgba(200, 155, 60, 0.34);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+/* Títulos pequeños de cada bloque */
+.dm-inventory-row strong,
+.money-summary-row strong,
+.panel-card h3,
+.create-panel h3 {
+  text-shadow: 0 0 10px rgba(200, 155, 60, 0.14);
+}
+
+/* Inputs más planos y elegantes */
+.panel-card input,
+.panel-card select,
+.create-panel input,
+.create-panel select,
+.create-panel textarea {
+  border-top: 1px solid rgba(200, 155, 60, 0.58);
+  border-left: 1px solid rgba(200, 155, 60, 0.28);
+  border-right: 1px solid rgba(200, 155, 60, 0.28);
+  border-bottom: 1px solid rgba(200, 155, 60, 0.58);
+  background:
+    linear-gradient(180deg, rgba(2, 10, 19, 0.96), rgba(4, 17, 31, 0.96));
+}
+
+/* Select cerrado más “barra de cliente” */
+.panel-card select,
+.create-panel select {
+  height: 38px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+  border-color: rgba(200, 155, 60, 0.50);
+  background-color: #06111d;
+}
+
+/* Opciones desplegadas: lo máximo posible con select nativo */
+.panel-card select option,
+.create-panel select option {
+  background-color: #071421;
+  color: #f0e6d2;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+/* Opción seleccionada */
+.panel-card select option:checked,
+.create-panel select option:checked {
+  background-color: #123d5b;
+  color: #ffffff;
+}
+
+/* Botones más cercanos al cliente */
+.panel-card button,
+.create-panel button,
+.dm-button-row button,
+button.secondary-button {
+  min-height: 34px;
+  border-width: 1px;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 8px 16px rgba(0, 0, 0, 0.28);
+}
+
+/* Botón primario estilo “Buscar partida” */
+.panel-card button:not(.secondary-button):not(.danger-button),
+.create-panel button:not(.secondary-button):not(.danger-button),
+.dm-button-row button:not(.secondary-button):not(.danger-button) {
+  background:
+    linear-gradient(180deg, #35d9f7 0%, #0faed5 52%, #087ba4 100%);
+  border-color: rgba(130, 230, 255, 0.70);
+  color: #f8fdff;
+}
+
+/* Botón secundario dorado oscuro */
+.panel-card button.secondary-button,
+.dm-button-row button.secondary-button {
+  background:
+    linear-gradient(180deg, #51462a 0%, #2e2718 54%, #17130b 100%);
+  border-color: rgba(200, 155, 60, 0.72);
+  color: #f0e6d2;
+}
+
+/* Botón de quitar más sobrio */
+.panel-card button.danger-button {
+  background:
+    linear-gradient(180deg, rgba(94, 39, 32, 0.98), rgba(34, 14, 12, 0.98));
+  border-color: rgba(255, 140, 120, 0.68);
+  color: #ffe1dc;
+}
+
+/* Hover más fino */
+.panel-card button:hover,
+.create-panel button:hover,
+.dm-button-row button:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+/* Formularios de dar item más ordenados */
+.dm-item-form label,
+.dm-money-form label,
+.dm-xp-form label,
+.create-panel label {
+  color: #c8aa6e;
+  font-size: 11px;
+  letter-spacing: 0.9px;
+}
+
+/* Notas y campos largos */
+.create-panel textarea,
+.dm-item-form input[name="notas"],
+.dm-create-item-form textarea,
+.dm-create-money-form textarea {
+  background:
+    linear-gradient(180deg, rgba(3, 12, 23, 0.98), rgba(5, 18, 32, 0.98));
+  border-color: rgba(200, 155, 60, 0.48);
+}
+
+/* Paneles de inventario más compactos */
+.dm-inventory-row {
+  border-color: rgba(200, 155, 60, 0.28);
+  background:
+    linear-gradient(180deg, rgba(4, 18, 32, 0.82), rgba(1, 9, 18, 0.86));
+}
+
+/* Resumen de inventarios más estilo colección */
+.item-card,
+.money-card {
+  border-color: rgba(200, 155, 60, 0.36);
+  background:
+    linear-gradient(180deg, rgba(7, 21, 37, 0.96), rgba(2, 10, 19, 0.98));
+}
+
+/* Imágenes de items/monedas más integradas */
+.item-image,
+.money-image {
+  border: 2px solid rgba(200, 155, 60, 0.60);
+  box-shadow:
+    0 0 0 2px rgba(0, 160, 220, 0.20),
+    0 0 22px rgba(0, 160, 220, 0.14);
+}
+
+/* Evita que algunos selects se vean demasiado blancos al abrir */
+select:focus {
+  background-color: #071421;
+  color: #f0e6d2;
+}

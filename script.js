@@ -401,15 +401,17 @@ function renderDM(jugadores) {
   `;
 
   inventarioContainer.innerHTML = `
-    <h2 class="section-title">Panel del DM: Items</h2>
+   <h2 class="section-title">Panel del DM: Items</h2>
 
-    <div class="dm-note">
-    Desde aquí puedes entregar items existentes a los jugadores o quitar items de sus inventarios. Los items quitados se desactivan en Sheets, no se borran.
-    </div>
+   <div class="dm-note">
+    Desde aquí puedes crear items nuevos, entregar items existentes a los jugadores o quitar items de sus inventarios. Las imágenes se suben manualmente a GitHub y aquí solo se escribe la ruta.
+   </div>
 
-    <div class="cards-grid">
-      ${jugadores.map(j => renderDMItemCard(j)).join("")}
-    </div>
+   ${renderCreateItemPanel()}
+
+   <div class="cards-grid">
+     ${jugadores.map(j => renderDMItemCard(j)).join("")}
+   </div>
 
     <h2 class="section-title">Resumen de inventarios</h2>
 
@@ -425,8 +427,10 @@ dineroContainer.innerHTML = `
   <h2 class="section-title">Panel del DM: Dinero</h2>
 
   <div class="dm-note">
-    Desde aquí puedes sumar, quitar o establecer dinero exacto para cada jugador. Si el jugador no tiene esa moneda, el sistema puede crearla al sumar o establecer.
+    Desde aquí puedes crear monedas nuevas, sumar, quitar o establecer dinero exacto para cada jugador. Si el jugador no tiene esa moneda, el sistema puede crearla al sumar o establecer.
   </div>
+
+  ${renderCreateMoneyPanel()}
 
   <div class="cards-grid">
     ${jugadores.map(j => renderDMMoneyCard(j)).join("")}
@@ -529,6 +533,106 @@ function renderFicha(data) {
           <p>${escapeHtml(ficha.conjuros_resumen || "Sin conjuros registrados.")}</p>
         </div>
       </div>
+    </article>
+  `;
+}
+
+function renderCreateItemPanel() {
+  return `
+    <article class="panel-card create-panel">
+      <h3>Crear item nuevo</h3>
+
+      <form class="dm-create-item-form">
+        <div class="dm-form-grid two-cols">
+          <div>
+            <label>Item ID opcional</label>
+            <input type="text" name="item_id" placeholder="Ej. flail_phb24" />
+          </div>
+
+          <div>
+            <label>Nombre</label>
+            <input type="text" name="nombre" placeholder="Ej. Flail / Mayal" required />
+          </div>
+        </div>
+
+        <div class="dm-form-grid three-cols">
+          <div>
+            <label>Tipo</label>
+            <input type="text" name="tipo" placeholder="Ej. Arma marcial" />
+          </div>
+
+          <div>
+            <label>Rareza</label>
+            <input type="text" name="rareza" placeholder="Ej. Común, Raro..." />
+          </div>
+
+          <div>
+            <label>Cargas base</label>
+            <input type="number" name="cargas_base" min="0" step="1" value="0" />
+          </div>
+        </div>
+
+        <label>Ruta de imagen</label>
+        <input type="text" name="imagen" placeholder="Ej. assets/items/flail.png" />
+
+        <label>Descripción</label>
+        <textarea name="descripcion" placeholder="Descripción del item"></textarea>
+
+        <div class="dm-form-grid two-cols">
+          <div>
+            <label>Dado</label>
+            <input type="text" name="dado" placeholder="Ej. 1d8 contundente" />
+          </div>
+
+          <div>
+            <label>Efecto</label>
+            <input type="text" name="efecto" placeholder="Ej. Maestría: Sap" />
+          </div>
+        </div>
+
+        <div class="dm-button-row single-action">
+          <button type="submit">Crear item</button>
+        </div>
+      </form>
+
+      <p class="dm-action-message" id="createItemMessage"></p>
+    </article>
+  `;
+}
+
+function renderCreateMoneyPanel() {
+  return `
+    <article class="panel-card create-panel">
+      <h3>Crear moneda nueva</h3>
+
+      <form class="dm-create-money-form">
+        <div class="dm-form-grid two-cols">
+          <div>
+            <label>Moneda ID opcional</label>
+            <input type="text" name="moneda_id" placeholder="Ej. solari" />
+          </div>
+
+          <div>
+            <label>Nombre</label>
+            <input type="text" name="nombre" placeholder="Ej. Solari" required />
+          </div>
+        </div>
+
+        <label>Región</label>
+        <input type="text" name="region" placeholder="Ej. Piltover, Zaun, Noxus..." />
+
+        <label>Ruta de imagen</label>
+        <input type="text" name="imagen" placeholder="Ej. assets/monedas/solari.png" />
+
+        <label>Descripción</label>
+        <textarea name="descripcion" placeholder="Descripción de la moneda"></textarea>
+
+        <div class="dm-button-row single-action">
+          <button type="submit">Crear moneda</button>
+        </div>
+      </form>
+
+      <p class="dm-action-message" id="createMoneyMessage"></p>
     </article>
   `;
 }
@@ -911,11 +1015,115 @@ function setupDynamicActions() {
       await handleChargeSetSubmit(form, event.submitter);
     }
 
-    if (form.classList.contains("dm-recharge-all-form")) {
+    if (form.classList.contains("dm-create-item-form")) {
       event.preventDefault();
-      await handleRechargeAllSubmit(form);
+      await handleCreateItemSubmit(form);
     }
+
+    if (form.classList.contains("dm-create-money-form")) {
+      event.preventDefault();
+      await handleCreateMoneySubmit(form);
+    }
+
   });
+}
+
+async function handleCreateItemSubmit(form) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede crear items.");
+    return;
+  }
+
+  const message = document.getElementById("createItemMessage");
+
+  const payload = {
+    token: currentSession.token,
+    item_id: form.elements.item_id.value,
+    nombre: form.elements.nombre.value,
+    tipo: form.elements.tipo.value,
+    rareza: form.elements.rareza.value,
+    imagen: form.elements.imagen.value,
+    descripcion: form.elements.descripcion.value,
+    dado: form.elements.dado.value,
+    efecto: form.elements.efecto.value,
+    cargas_base: form.elements.cargas_base.value || 0
+  };
+
+  if (!payload.nombre.trim()) {
+    if (message) message.textContent = "Escribe el nombre del item.";
+    return;
+  }
+
+  try {
+    if (message) message.textContent = "Creando item...";
+
+    const response = await apiRequest("crearItem", payload);
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudo crear el item.");
+    }
+
+    if (message) {
+      message.textContent = `Item creado: ${response.item.nombre} (${response.item.item_id})`;
+    }
+
+    form.reset();
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+
+    if (message) {
+      message.textContent = error.message;
+    }
+  }
+}
+
+async function handleCreateMoneySubmit(form) {
+  if (!currentSession || currentSession.rol !== "dm") {
+    alert("Solo el DM puede crear monedas.");
+    return;
+  }
+
+  const message = document.getElementById("createMoneyMessage");
+
+  const payload = {
+    token: currentSession.token,
+    moneda_id: form.elements.moneda_id.value,
+    nombre: form.elements.nombre.value,
+    region: form.elements.region.value,
+    imagen: form.elements.imagen.value,
+    descripcion: form.elements.descripcion.value
+  };
+
+  if (!payload.nombre.trim()) {
+    if (message) message.textContent = "Escribe el nombre de la moneda.";
+    return;
+  }
+
+  try {
+    if (message) message.textContent = "Creando moneda...";
+
+    const response = await apiRequest("crearMoneda", payload);
+
+    if (!response.ok) {
+      throw new Error(response.error || "No se pudo crear la moneda.");
+    }
+
+    if (message) {
+      message.textContent = `Moneda creada: ${response.moneda.nombre} (${response.moneda.moneda_id})`;
+    }
+
+    form.reset();
+    await cargarDatos();
+
+  } catch (error) {
+    console.error(error);
+
+    if (message) {
+      message.textContent = error.message;
+    }
+  }
 }
 
 async function handleChargeActionSubmit(form, submitter) {
